@@ -9,7 +9,7 @@ class ICategoryRepository(ABC):
         pass 
 
     @abstractmethod
-    async def get_by_id(self, id: UUID) -> CategoryResponse:
+    async def get_by_id(self, category_id: UUID) -> CategoryResponse:
         pass
 
     @abstractmethod
@@ -17,9 +17,9 @@ class ICategoryRepository(ABC):
         pass
     
     @abstractmethod
-    async def update(self, id: UUID, model: CategoryCreate) -> CategoryResponse:
+    async def update(self, category_id: UUID, model: CategoryCreate) -> CategoryResponse:
         pass
 
     @abstractmethod
-    async def delete(self, id: UUID) -> bool:
+    async def delete(self, category_id: UUID) -> bool:
         pass

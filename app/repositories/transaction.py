@@ -9,7 +9,7 @@ class ITransactionRepository(ABC):
         pass 
 
     @abstractmethod
-    async def get_by_id(self, id: UUID) -> TransactionResponse:
+    async def get_by_id(self, transaction_id: UUID) -> TransactionResponse:
         pass
 
     @abstractmethod
@@ -17,11 +17,11 @@ class ITransactionRepository(ABC):
         pass
     
     @abstractmethod
-    async def update(self, id: UUID, model: TransactionCreate) -> TransactionResponse:
+    async def update(self, transaction_id: UUID, model: TransactionCreate) -> TransactionResponse:
         pass
 
     @abstractmethod
-    async def delete(self, id: UUID) -> bool:
+    async def delete(self, transaction_id: UUID) -> bool:
         pass
 
     # методы для связи с категориями
