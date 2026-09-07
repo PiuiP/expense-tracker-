@@ -65,3 +65,18 @@ class FakeTransactionRepository(ITransactionRepository):
             return self._storage_trans_cat[transaction_id]
         except KeyError:
             raise ValueError(f"Transaction with id {transaction_id} not found")
+
+    async def get_filtered(self, category_id: UUID | None, date_from: datetime, date_to: datetime) -> list[TransactionResponse]:
+        result = []
+        for transaction in self._storage_transaction.values():
+            if not (date_from <= transaction.date_of_transaction <= date_to):
+                continue
+            
+            if category_id is not None:
+                cat_ids = self._storage_trans_cat.get(transaction.id, [])
+                if category_id not in cat_ids:
+                    continue
+            
+            result.append(transaction)
+
+        return result

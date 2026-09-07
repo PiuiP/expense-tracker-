@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from uuid import UUID
 from app.models.transaction import TransactionCreate, TransactionResponse
 
@@ -33,3 +34,8 @@ class ITransactionRepository(ABC):
     @abstractmethod
     async def get_categories_by_transaction_id(self, transaction_id: UUID) -> list[UUID]:
         pass
+
+    @abstractmethod
+    async def get_filtered(self, category_id: UUID | None, 
+                           date_from: datetime, date_to: datetime) -> list[TransactionResponse]:
+          pass
