@@ -1,19 +1,13 @@
 from aiohttp import web
 from uuid import UUID
 from app.models.transaction import TransactionCreate, TransactionResponse
-from app.services.transaction import TransactionService
-from app.repositories.fake_transaction import FakeTransactionRepository
 
 routes = web.RouteTableDef()
-
-#пока фейк потом на SQL
-_repo = FakeTransactionRepository()
-_service = TransactionService(_repo)
-
 
 @routes.post('/transactions')
 async def create_transaction_handler(request: web.Request) -> web.Response:
     """POST /transactions - создать транзакцию"""
+    service = request.app['transactionservice']
     try:
         body = await request.json()
         
@@ -22,7 +16,7 @@ async def create_transaction_handler(request: web.Request) -> web.Response:
         
         transaction_data = TransactionCreate(**body)
         
-        result: TransactionResponse = await _service.create_transaction(transaction_data, category_ids)
+        result: TransactionResponse = await service.create_transaction(transaction_data, category_ids)
         
         return web.json_response(
             data=result.model_dump(mode='json'),  #конвертирует UUID/datetime в строки
@@ -39,9 +33,10 @@ async def create_transaction_handler(request: web.Request) -> web.Response:
 @routes.get('/transactions/{id}')
 async def get_transaction_handler(request: web.Request) -> web.Response:
     """GET /transactions/{id} - получить транзакцию по ID"""
+    service = request.app['transactionservice']
     try:
         transaction_id = UUID(request.match_info['id'])
-        result = await _service.get_transaction_by_id(transaction_id)
+        result = await service.get_transaction_by_id(transaction_id)
         
         return web.json_response(
             data=result.model_dump(mode='json'),
@@ -64,8 +59,9 @@ async def get_transaction_handler(request: web.Request) -> web.Response:
 @routes.get('/transactions')
 async def get_all_transactions_handler(request: web.Request) -> web.Response:
     """GET /transactions - получить все транзакции"""
+    service = request.app['transactionservice']
     try:
-        result = await _service.get_all_transactions()
+        result = await service.get_all_transactions()
         
         return web.json_response(
             data=[t.model_dump(mode='json') for t in result],
@@ -81,12 +77,13 @@ async def get_all_transactions_handler(request: web.Request) -> web.Response:
 @routes.put('/transactions/{id}')
 async def update_transaction_handler(request: web.Request) -> web.Response:
     """PUT /transactions/{id} - обновить транзакцию"""
+    service = request.app['transactionservice']
     try:
         transaction_id = UUID(request.match_info['id'])
         
         body = await request.json()
         
-        result = await _service.update_transaction(transaction_id, body)
+        result = await service.update_transaction(transaction_id, body)
         
         return web.json_response(
             data=result.model_dump(mode='json'),
@@ -107,10 +104,11 @@ async def update_transaction_handler(request: web.Request) -> web.Response:
 @routes.delete('/transactions/{id}')
 async def delete_transaction_handler(request: web.Request) -> web.Response:
     """DELETE /transactions/{id} - удалить транзакцию"""
+    service = request.app['transactionservice']
     try:
         transaction_id = UUID(request.match_info['id'])
 
-        result = await _service.delete_transaction(transaction_id) #-> bool
+        result = await service.delete_transaction(transaction_id) #-> bool
         
         if result:
             return web.json_response(
@@ -133,13 +131,14 @@ async def delete_transaction_handler(request: web.Request) -> web.Response:
 @routes.get('/transactions/filter')
 async def filter_transactions_handler(request: web.Request) -> web.Response:
     """GET /transactions/filter?category_id=...&date_from=...&date_to=..."""
+    service = request.app['transactionservice']
     try:
         category_id = request.query.get('category_id', None)
         date_from = request.query.get('date_from')
         date_to = request.query.get('date_to')
 
         cat_uuid = UUID(category_id) if category_id else None #if UUID(None) -> ERRRROR((((
-        result = await _service.get_filtered_transactions(cat_uuid, date_from, date_to)
+        result = await service.get_filtered_transactions(cat_uuid, date_from, date_to)
 
         #result - list -> model_dump for each element (!!!!!model_dump cannot be applied to lists, only pydentic-models!!!!!)
         return web.json_response(
@@ -153,8 +152,9 @@ async def filter_transactions_handler(request: web.Request) -> web.Response:
 @routes.get('/transactions/stats')
 async def get_stats_handler(request: web.Request) -> web.Response:
     """GET /transactions/stats - статистика по транзакциям"""
+    service = request.app['transactionservice']
     try:
-        stats = await _service.get_transaction_stats() #-> dict
+        stats = await service.get_transaction_stats() #-> dict
 
         return web.json_response(
             data=stats,
@@ -169,8 +169,9 @@ async def get_stats_handler(request: web.Request) -> web.Response:
 @routes.get('/transactions/expenses')
 async def get_expenses_by_category_handler(request: web.Request) -> web.Response:
     """GET /transactions/expenses - сумма трат по категориям"""
+    service = request.app['transactionservice']
     try:
-        expenses = await _service.get_expenses_by_category() #-> dict
+        expenses = await service.get_expenses_by_category() #-> dict
 
         return web.json_response(
             data=expenses,
