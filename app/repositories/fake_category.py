@@ -19,11 +19,8 @@ class FakeCategoryRepository(ICategoryRepository):
         self._storage[new_uuid] = new_category
         return self._storage[new_uuid]
 
-    async def get_by_id(self, category_id: UUID) -> CategoryResponse:
-        try:
-            return self._storage[category_id]
-        except KeyError:
-            raise ValueError(f"Category with id {category_id} not found")
+    async def get_by_id(self, category_id: UUID) -> CategoryResponse | None:
+        return self._storage.get(category_id)  
 
     async def get_all(self) -> list[CategoryResponse]:
         return list(self._storage.values())

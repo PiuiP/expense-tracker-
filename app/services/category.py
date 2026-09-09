@@ -18,7 +18,9 @@ class CategoryService():
 
     async def update_category(self, category_id: UUID, new_data: dict) -> CategoryResponse:
             old_category = await self.repository.get_by_id(category_id)
-    
+            if old_category is None:
+                raise ValueError(f"Category with id {category_id} not found")
+        
             old_dict = old_category.model_dump()
     
             old_dict.update(new_data)
