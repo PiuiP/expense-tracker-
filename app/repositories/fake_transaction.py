@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 from datetime import datetime
+from decimal import Decimal
 
 from app.repositories.transaction import ITransactionRepository
 from app.models.transaction import TransactionResponse, TransactionCreate
@@ -24,10 +25,7 @@ class FakeTransactionRepository(ITransactionRepository):
         return self._storage_transaction[new_uuid]
 
     async def get_by_id(self, transaction_id: UUID) -> TransactionResponse:
-        try:
-            return self._storage_transaction[transaction_id]
-        except KeyError:
-            raise ValueError(f"Transaction with id {transaction_id} not found")
+        return self._storage_transaction.get(transaction_id)
 
     async def get_all(self) -> list[TransactionResponse]:
         return list(self._storage_transaction.values())
@@ -61,10 +59,7 @@ class FakeTransactionRepository(ITransactionRepository):
         self._storage_trans_cat[transaction_id] = category_ids
 
     async def get_categories_by_transaction_id(self, transaction_id: UUID) -> list[UUID]:
-        try:
-            return self._storage_trans_cat[transaction_id]
-        except KeyError:
-            raise ValueError(f"Transaction with id {transaction_id} not found")
+        return self._storage_trans_cat.get(transaction_id, [])
 
     async def get_filtered(self, category_id: UUID | None, date_from: datetime, date_to: datetime) -> list[TransactionResponse]:
         result = []

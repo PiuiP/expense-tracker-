@@ -1,6 +1,8 @@
 from aiohttp import web
 from uuid import UUID
+
 from app.models.category import CategoryResponse, CategoryCreate
+from app.dependencies import CATEGORY_SERVICE_KEY
 
 routes = web.RouteTableDef()
 
@@ -8,7 +10,7 @@ routes = web.RouteTableDef()
 @routes.post('/categories')
 async def create_category_handler(request: web.Request) -> web.Response:
     """POST /categories - create category"""
-    service = request.app['category_service']
+    service = request.app[CATEGORY_SERVICE_KEY]
     try:
         body = await request.json()
         category_data = CategoryCreate(**body)
@@ -26,7 +28,7 @@ async def create_category_handler(request: web.Request) -> web.Response:
 @routes.get('/categories/{id}')
 async def get_category_handler(request: web.Request) -> web.Response:
     """GET /categories/{id} - получить категорию по ID"""
-    service = request.app['category_service']
+    service = request.app[CATEGORY_SERVICE_KEY]
     try:
         category_id = UUID(request.match_info['id'])
         result = await service.get_category_by_id(category_id)
@@ -50,7 +52,7 @@ async def get_category_handler(request: web.Request) -> web.Response:
 @routes.get('/categories')
 async def get_all_categories_handler(request: web.Request) -> web.Response:
     """GET /categories - получить все категории"""
-    service = request.app['category_service']
+    service = request.app[CATEGORY_SERVICE_KEY]
     try:
         result = await service.get_all_categories()
 
@@ -67,7 +69,7 @@ async def get_all_categories_handler(request: web.Request) -> web.Response:
 @routes.put('/categories/{id}')  # ← ВАЖНО: добавлен {id}
 async def update_category_handler(request: web.Request) -> web.Response:
     """PUT /categories/{id} - обновить категорию"""
-    service = request.app['category_service']
+    service = request.app[CATEGORY_SERVICE_KEY]
     try:
         category_id = UUID(request.match_info['id'])
         
@@ -95,7 +97,7 @@ async def update_category_handler(request: web.Request) -> web.Response:
 @routes.delete('/categories/{id}')
 async def delete_category_handler(request: web.Request) -> web.Response:
     """DELETE /categories/{id} - удалить категорию"""
-    service = request.app['category_service']
+    service = request.app[CATEGORY_SERVICE_KEY]
     try:
         category_id = UUID(request.match_info['id'])
         deleted = await service.delete_category(category_id)
