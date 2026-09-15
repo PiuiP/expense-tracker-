@@ -7,7 +7,7 @@ from app.routes.transactions import routes as transaction_routes
 from app.routes.categories import routes as category_routes
 
 from app.repositories.asyncpg_transaction import AsyncPGTransactionRepository
-from app.repositories.fake_category import FakeCategoryRepository
+from app.repositories.asyncpg_category import AsyncPGCategoryRepository
 
 from app.services.transaction import TransactionService
 from app.services.category import CategoryService
@@ -24,7 +24,7 @@ async def init_app(app: web.Application):
     pool = await asyncpg.create_pool(DATABASE_URL)
 
     tx_repo = AsyncPGTransactionRepository(pool)
-    cat_repo = FakeCategoryRepository() #Потом сюда изменить 
+    cat_repo = AsyncPGCategoryRepository(pool) 
 
     tx_service = TransactionService(tx_repo, cat_repo)
     cat_service = CategoryService(cat_repo)
