@@ -1,71 +1,66 @@
-from aiohttp import web
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
-from app.models.transaction import TransactionCreate, TransactionResponse
+from aiohttp import web
+
 from app.dependencies import TRANSACTION_SERVICE_KEY
+from app.models.transaction import TransactionCreate, TransactionResponse
 
 routes = web.RouteTableDef()
 
-@routes.post('/transactions')
+
+@routes.post("/transactions")
 async def create_transaction_handler(request: web.Request) -> web.Response:
     """POST /transactions - создать транзакцию"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
         body = await request.json()
-        
-        category_ids_raw = body.pop('category_ids', [])
+
+        category_ids_raw = body.pop("category_ids", [])
         category_ids = [UUID(cid) for cid in category_ids_raw]
-        
+
         transaction_data = TransactionCreate(**body)
-        
-        result: TransactionResponse = await service.create_transaction(transaction_data, category_ids)
-        
-        return web.json_response(
-            data=result.model_dump(mode='json'),  #конвертирует UUID/datetime в строки
-            status=201
+
+        result: TransactionResponse = await service.create_transaction(
+            transaction_data, category_ids
         )
-        
+
+        return web.json_response(
+            data=result.model_dump(mode="json"),  # конвертирует UUID/datetime в строки
+            status=201,
+        )
+
     except Exception as e:
-        return web.json_response(
-            data={'error': str(e)},
-            status=400
-        )
+        return web.json_response(data={"error": str(e)}, status=400)
 
 
-
-@routes.get('/transactions')
+@routes.get("/transactions")
 async def get_all_transactions_handler(request: web.Request) -> web.Response:
     """GET /transactions - получить все транзакции"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
         result = await service.get_all_transactions()
-        
+
         return web.json_response(
-            data=[t.model_dump(mode='json') for t in result],
-            status=200
+            data=[t.model_dump(mode="json") for t in result], status=200
         )
-        
+
     except Exception as e:
-        return web.json_response(
-            data={'error': str(e)},
-            status=500
-        )
+        return web.json_response(data={"error": str(e)}, status=500)
 
 
-@routes.get('/transactions/filter')
+@routes.get("/transactions/filter")
 async def filter_transactions_handler(request: web.Request) -> web.Response:
     """GET /transactions/filter?category_id=...&date_from=...&date_to=..."""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        category_id = request.query.get('category_id', None)
-        date_from = request.query.get('date_from')
-        date_to = request.query.get('date_to')
+        category_id = request.query.get("category_id", None)
+        date_from = request.query.get("date_from")
+        date_to = request.query.get("date_to")
 
         if not date_from or not date_to:
             return web.json_response(
-                data={'error': 'date_from and date_to are required'}, 
-                status=400
+                data={"error": "date_from and date_to are required"}, status=400
             )
 
         try:
@@ -73,164 +68,126 @@ async def filter_transactions_handler(request: web.Request) -> web.Response:
             date_to = datetime.fromisoformat(date_to)
         except ValueError:
             return web.json_response(
-                data={'error': 'Invalid date format. Use ISO format (e.g., YYYY-MM-DD)'}, 
-                status=400
+                data={
+                    "error": "Invalid date format. Use ISO format (e.g., YYYY-MM-DD)"
+                },
+                status=400,
             )
 
-        cat_uuid = UUID(category_id) if category_id else None #if UUID(None) -> ERRRROR((((
+        cat_uuid = (
+            UUID(category_id) if category_id else None
+        )  # if UUID(None) -> ERRRROR((((
         result = await service.get_filtered_transactions(cat_uuid, date_from, date_to)
 
-        #result - list -> model_dump for each element (!!!!!model_dump cannot be applied to lists, only pydentic-models!!!!!)
+        # result - list -> model_dump for each element
+        # (!!!!!model_dump cannot be applied to lists, only pydentic-models!!!!!)
         return web.json_response(
-            data=[t.model_dump(mode='json') for t in result], 
-            status=200
-        )
-        
-    except ValueError as e:
-        return web.json_response(
-            data={'error': str(e)}, 
-            status=400
-        )
-    
-    except Exception as e:
-        return web.json_response(
-            data={'error': str(e)}, 
-            status=500
+            data=[t.model_dump(mode="json") for t in result], status=200
         )
 
-@routes.get('/transactions/stats')
+    except ValueError as e:
+        return web.json_response(data={"error": str(e)}, status=400)
+
+    except Exception as e:
+        return web.json_response(data={"error": str(e)}, status=500)
+
+
+@routes.get("/transactions/stats")
 async def get_stats_handler(request: web.Request) -> web.Response:
     """GET /transactions/stats - статистика по транзакциям"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        stats = await service.get_transaction_stats() #-> dict
+        stats = await service.get_transaction_stats()  # -> dict
 
-        return web.json_response(
-            data=stats,
-            status=200
-        )
-    
+        return web.json_response(data=stats, status=200)
+
     except Exception as e:
-        return web.json_response(
-            data={'error': str(e)},
-            status=500
-        )
+        return web.json_response(data={"error": str(e)}, status=500)
 
-@routes.get('/transactions/expenses')
+
+@routes.get("/transactions/expenses")
 async def get_expenses_by_category_handler(request: web.Request) -> web.Response:
     """GET /transactions/expenses - сумма трат по категориям"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        expenses = await service.get_expenses_by_category() #-> dict
+        expenses = await service.get_expenses_by_category()  # -> dict
 
-        return web.json_response(
-            data=expenses,
-            status=200
-        )
+        return web.json_response(data=expenses, status=200)
     except Exception as e:
-        return web.json_response(
-            data={'error': str(e)},
-            status=500
-        )
+        return web.json_response(data={"error": str(e)}, status=500)
 
-@routes.get('/transactions/{id}')
+
+@routes.get("/transactions/{id}")
 async def get_transaction_handler(request: web.Request) -> web.Response:
     """GET /transactions/{id} - получить транзакцию по ID"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        transaction_id = UUID(request.match_info['id'])
+        transaction_id = UUID(request.match_info["id"])
 
     except ValueError:
-        return web.json_response(
-            data={'error': 'Invalid UUID format'}, 
-            status=400
-        )
+        return web.json_response(data={"error": "Invalid UUID format"}, status=400)
 
     try:
         result = await service.get_transaction_by_id(transaction_id)
 
         if result is None:
             return web.json_response(
-                data={'error': 'Transaction not found'}, 
-                status=404
+                data={"error": "Transaction not found"}, status=404
             )
-        
-        return web.json_response(
-            data=result.model_dump(mode='json'), 
-            status=200
-        )
-    
-    except Exception as e:
-        return web.json_response(
-            data={'error': str(e)}, 
-            status=500
-        )
 
-@routes.put('/transactions/{id}')
+        return web.json_response(data=result.model_dump(mode="json"), status=200)
+
+    except Exception as e:
+        return web.json_response(data={"error": str(e)}, status=500)
+
+
+@routes.put("/transactions/{id}")
 async def update_transaction_handler(request: web.Request) -> web.Response:
     """PUT /transactions/{id} - обновить транзакцию"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        transaction_id = UUID(request.match_info['id'])
+        transaction_id = UUID(request.match_info["id"])
 
     except ValueError:
-        return web.json_response(
-            data={'error': 'Invalid UUID format'}, 
-            status=400
-        )
-    
+        return web.json_response(data={"error": "Invalid UUID format"}, status=400)
+
     try:
         body = await request.json()
 
         existing = await service.get_transaction_by_id(transaction_id)
         if existing is None:
             return web.json_response(
-                data={'error': 'Transaction not found'}, 
-                status=404
+                data={"error": "Transaction not found"}, status=404
             )
-            
+
         result = await service.update_transaction(transaction_id, body)
 
-        return web.json_response(
-            data=result.model_dump(mode='json'), 
-            status=200
-        )
-    
+        return web.json_response(data=result.model_dump(mode="json"), status=200)
+
     except Exception as e:
-        return web.json_response(
-            data={'error': str(e)}, 
-            status=500
-        )
-        
-@routes.delete('/transactions/{id}')
+        return web.json_response(data={"error": str(e)}, status=500)
+
+
+@routes.delete("/transactions/{id}")
 async def delete_transaction_handler(request: web.Request) -> web.Response:
     """DELETE /transactions/{id} - удалить транзакцию"""
     service = request.app[TRANSACTION_SERVICE_KEY]
     try:
-        transaction_id = UUID(request.match_info['id'])
+        transaction_id = UUID(request.match_info["id"])
 
     except ValueError:
-        return web.json_response(
-            data={'error': 'Invalid UUID format'}, 
-            status=400
-        )
-    
+        return web.json_response(data={"error": "Invalid UUID format"}, status=400)
+
     try:
         result = await service.delete_transaction(transaction_id)
         if not result:
             return web.json_response(
-                data={'error': 'Transaction not found'},
-                status=404
+                data={"error": "Transaction not found"}, status=404
             )
-        
+
         return web.json_response(
-            data={'message': 'Transaction is deleted successfully'},
-            status=200
-        )
-    
-    except Exception as e:
-        return web.json_response(
-            data={'error': str(e)},
-            status=500
+            data={"message": "Transaction is deleted successfully"}, status=200
         )
 
+    except Exception as e:
+        return web.json_response(data={"error": str(e)}, status=500)

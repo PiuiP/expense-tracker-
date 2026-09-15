@@ -1,7 +1,10 @@
-import asyncpg
 from uuid import UUID
+
+import asyncpg
+
 from app.models.category import CategoryCreate, CategoryResponse
 from app.repositories.category import ICategoryRepository
+
 
 class AsyncPGCategoryRepository(ICategoryRepository):
     def __init__(self, pool: asyncpg.Pool):
@@ -29,7 +32,9 @@ class AsyncPGCategoryRepository(ICategoryRepository):
             rows = await conn.fetch(query)
         return [self._row_to_response(row) for row in rows]
 
-    async def update(self, category_id: UUID, model: CategoryCreate) -> CategoryResponse:
+    async def update(
+        self, category_id: UUID, model: CategoryCreate
+    ) -> CategoryResponse:
         query = """
             UPDATE categories
             SET name = $1, description = $2
@@ -50,8 +55,8 @@ class AsyncPGCategoryRepository(ICategoryRepository):
 
     def _row_to_response(self, row: asyncpg.Record) -> CategoryResponse:
         return CategoryResponse(
-            id=row['id'],
-            name=row['name'],
-            description=row['description'],
-            created_at=row['created_at']
+            id=row["id"],
+            name=row["name"],
+            description=row["description"],
+            created_at=row["created_at"],
         )

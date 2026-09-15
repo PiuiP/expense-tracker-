@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from uuid import UUID
+
 from app.models.transaction import TransactionCreate, TransactionResponse
 
+
 class ITransactionRepository(ABC):
-    
+
     @abstractmethod
     async def create(self, model: TransactionCreate) -> TransactionResponse:
-        pass 
+        pass
 
     @abstractmethod
     async def get_by_id(self, transaction_id: UUID) -> TransactionResponse:
@@ -16,9 +18,11 @@ class ITransactionRepository(ABC):
     @abstractmethod
     async def get_all(self) -> list[TransactionResponse]:
         pass
-    
+
     @abstractmethod
-    async def update(self, transaction_id: UUID, model: TransactionCreate) -> TransactionResponse:
+    async def update(
+        self, transaction_id: UUID, model: TransactionCreate
+    ) -> TransactionResponse:
         pass
 
     @abstractmethod
@@ -26,16 +30,21 @@ class ITransactionRepository(ABC):
         pass
 
     # методы для связи с категориями
-    
+
     @abstractmethod
-    async def add_categories(self, transaction_id: UUID, category_ids: list[UUID]) -> None:
+    async def add_categories(
+        self, transaction_id: UUID, category_ids: list[UUID]
+    ) -> None:
         pass
 
     @abstractmethod
-    async def get_categories_by_transaction_id(self, transaction_id: UUID) -> list[UUID]:
+    async def get_categories_by_transaction_id(
+        self, transaction_id: UUID
+    ) -> list[UUID]:
         pass
 
     @abstractmethod
-    async def get_filtered(self, category_id: UUID | None, 
-                           date_from: datetime, date_to: datetime) -> list[TransactionResponse]:
-          pass
+    async def get_filtered(
+        self, category_id: UUID | None, date_from: datetime, date_to: datetime
+    ) -> list[TransactionResponse]:
+        pass
