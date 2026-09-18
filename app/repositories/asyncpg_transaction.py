@@ -139,3 +139,28 @@ class AsyncPGTransactionRepository(ITransactionRepository):
             date_of_transaction=row["date_of_transaction"],
             created_at=row["created_at"],
         )
+
+    async def get_transaction_stats(self) -> dict[str, Decimal]:
+        query = """
+            SELECT type_of_transaction, SUM(amount) as total
+            FROM transactions
+            GROUP BY type_of_transaction
+        """
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(query)
+        
+        return {row['type_of_transaction']: Decimal(str(row['total'])) for row in rows}
+
+    async def get_expenses_by_category(self) -> dict[str, Decimal]:
+        query = """
+            SELECT c.name as category_name, SUM(t.amount) as total_expense
+            FROM transactions t
+            JOIN transaction_categories tc ON t.id = tc.transaction_id
+            JOIN categories c ON tc.category_id = c.id
+            WHERE t.type_of_transaction = 'expense'
+            GROUP BY c.name
+        """
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(query)
+        
+        return {row['category_name']: Decimal(str(row['total_expense'])) for row in rows}

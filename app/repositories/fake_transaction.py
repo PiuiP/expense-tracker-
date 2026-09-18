@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID, uuid4
 
 from app.models.transaction import TransactionCreate, TransactionResponse
@@ -82,3 +83,19 @@ class FakeTransactionRepository(ITransactionRepository):
             result.append(transaction)
 
         return result
+
+    async def get_transaction_stats(self) -> dict[str, Decimal]:
+        stats = {}
+        for transaction in self._storage_transaction.values():
+            tx_type = transaction.type_of_transaction
+            amount = transaction.amount if isinstance(transaction.amount, Decimal) else Decimal(str(transaction.amount))
+            if tx_type not in stats:
+                stats[tx_type] = Decimal('0.0')
+            stats[tx_type] += amount
+        return stats
+
+    async def get_expenses_by_category(self) -> dict[str, Decimal]:
+        # Для фейкового репозитория нужна связь с категориями
+        # Но у нас нет доступа к FakeCategoryRepository здесь
+        # Поэтому возвращаем пустой словарь
+        return {}
