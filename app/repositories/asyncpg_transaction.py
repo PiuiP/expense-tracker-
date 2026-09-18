@@ -148,8 +148,8 @@ class AsyncPGTransactionRepository(ITransactionRepository):
         """
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(query)
-        
-        return {row['type_of_transaction']: Decimal(str(row['total'])) for row in rows}
+
+        return {row["type_of_transaction"]: Decimal(str(row["total"])) for row in rows}
 
     async def get_expenses_by_category(self) -> dict[str, Decimal]:
         query = """
@@ -162,5 +162,7 @@ class AsyncPGTransactionRepository(ITransactionRepository):
         """
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(query)
-        
-        return {row['category_name']: Decimal(str(row['total_expense'])) for row in rows}
+
+        return {
+            row["category_name"]: Decimal(str(row["total_expense"])) for row in rows
+        }

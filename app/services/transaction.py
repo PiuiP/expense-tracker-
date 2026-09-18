@@ -57,14 +57,14 @@ class TransactionService:
 
     async def get_transaction_stats(self) -> dict:
         stats = await self.repository.get_transaction_stats()
-        
-        total_income = stats.get('income', Decimal('0.0'))
-        total_expense = stats.get('expense', Decimal('0.0'))
-        
+
+        total_income = stats.get("income", Decimal("0.0"))
+        total_expense = stats.get("expense", Decimal("0.0"))
+
         return {
             "total_income": str(total_income),
             "total_expense": str(total_expense),
-            "balance": str(total_income - total_expense)
+            "balance": str(total_income - total_expense),
         }
 
     async def get_expenses_by_category(self) -> dict:

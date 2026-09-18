@@ -88,9 +88,13 @@ class FakeTransactionRepository(ITransactionRepository):
         stats = {}
         for transaction in self._storage_transaction.values():
             tx_type = transaction.type_of_transaction
-            amount = transaction.amount if isinstance(transaction.amount, Decimal) else Decimal(str(transaction.amount))
+            amount = (
+                transaction.amount
+                if isinstance(transaction.amount, Decimal)
+                else Decimal(str(transaction.amount))
+            )
             if tx_type not in stats:
-                stats[tx_type] = Decimal('0.0')
+                stats[tx_type] = Decimal("0.0")
             stats[tx_type] += amount
         return stats
 
